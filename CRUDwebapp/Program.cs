@@ -1,3 +1,5 @@
+using CRUDwebapp;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -8,7 +10,9 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(60);
 });
 
+builder.Services.AddScoped<APIGateway>();
 
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 

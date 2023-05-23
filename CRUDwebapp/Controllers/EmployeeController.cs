@@ -1,6 +1,8 @@
 ﻿using CRUDwebapp.Models;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System.Net.Http;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 
@@ -9,121 +11,123 @@ namespace CRUDwebapp.Controllers
     public class EmployeeController : Controller
     {
 
-        private HttpClient httpClient = new HttpClient();
-        public static string baseUrl = "http://localhost:5088/api/employee";
+        private readonly APIGateway apiGateway;
+        private readonly HttpClient _httpClient;
         private readonly IConfiguration _configs;
 
-        public EmployeeController(IConfiguration configs)
+
+        public EmployeeController(APIGateway ApiGateway, IHttpClientFactory httpClientFactory, IConfiguration configs)
         {
+            this.apiGateway = ApiGateway;
+            _httpClient = httpClientFactory.CreateClient();
             _configs = configs;
         }
 
-        public async Task<IActionResult> Index()
-        {
 
-            var employee = await GetEmployee();
-            return View(employee);
+
+
+
+        public IActionResult Index()
+        {
+            /*List<Employee> employees = new List<Employee>();*/
+            List<Employee> employees;
+            //api get will come
+            employees = apiGateway.ListEmployees();
+            return View(employees);
         }
 
 
         [HttpGet]
-        public async Task<List<Employee>> GetEmployee()
+        public IActionResult Create()
         {
-
-
-
-            var accessToken = HttpContext.Session.GetString("JWToken");
-            var url = baseUrl;
-            HttpClient client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            client.DefaultRequestHeaders.Add("ApiKey", _configs.GetValue<string>("ApiKey"));
-            string jsonStr = await client.GetStringAsync(url);
-
-            var res = JsonConvert.DeserializeObject<List<Employee>>(jsonStr).ToList();
-
-            return res;
-
+            Employee employee = new Employee();
+            return View(employee);
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id, Name")] Employee employee)
+        public IActionResult Create(Employee employee)
         {
-            var accessToken = HttpContext.Session.GetString("JWToken");
-            var url = baseUrl;
-            HttpClient client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            client.DefaultRequestHeaders.Add("ApiKey", _configs.GetValue<string>("ApiKey"));
+            apiGateway.CreateEmployee(employee);
+            return RedirectToAction("index");
+        }
 
-            var stringContent = new StringContent(JsonConvert.SerializeObject(employee), Encoding.UTF8, "application/json");
-            await client.PostAsync(url, stringContent);
 
-            return RedirectToAction(nameof(Index));
+        public IActionResult Details(int Id)
+        {
+            Employee employee = new Employee();
+            employee = apiGateway.GetEmployee(Id);
+            return View(employee);
+        }
 
+        [HttpGet]
+        public IActionResult Edit(int Id)
+        {
+            Employee employee;
+            employee = apiGateway.GetEmployee(Id);
+            return View(employee);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(int id, [Bind("Id, Name")] Employee employee)
+        public IActionResult Edit(Employee employee)
         {
-            if (id != employee.Id)
+            apiGateway.UpdateEmployee(employee);
+            return RedirectToAction("Index");
+        }
+
+
+/*        [HttpGet]
+        public IActionResult Delete(int Id)
+        {
+            Employee employee;
+            employee = apiGateway.GetEmployee(Id);
+            return View(employee);
+        }*/
+        /*
+                [HttpPost]
+                public IActionResult Delete(Employee employee)
+                {
+                    apiGateway.DeleteEmployee(employee.Id);
+                    return RedirectToAction("Index");
+                }
+
+
+
+        */
+
+
+
+        public async Task<IActionResult> Delete(int id)
+        {
+
+            _httpClient.DefaultRequestHeaders.Add("ApiKey", _configs.GetValue<string>("ApiKey"));
+            var response = await _httpClient.DeleteAsync($"http://localhost:5088/api/Employee{id}");
+
+            if (response.IsSuccessStatusCode)
             {
+                var content = await response.Content.ReadAsStringAsync();
+                // Process the successful response here
+                return Ok(content);
+            }
+            else if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                // Handle 404 Not Found error
                 return NotFound();
             }
-
-            var accessToken = HttpContext.Session.GetString("JWToken");
-            var url = baseUrl + id;
-            HttpClient client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            client.DefaultRequestHeaders.Add("ApiKey", _configs.GetValue<string>("ApiKey"));
-
-            var stringContent = new StringContent(JsonConvert.SerializeObject(employee), Encoding.UTF8, "application/json");
-            await client.PutAsync(url, stringContent);
-
-            return RedirectToAction(nameof(Index));
-
+            else
+            {
+                // Handle other error cases
+                return StatusCode((int)response.StatusCode);
+            }
         }
 
 
 
 
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var accessToken = HttpContext.Session.GetString("JWToken");
-            var url = baseUrl + id;
-            HttpClient client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-            string jsonStr = await client.GetStringAsync(url);
-            var res = JsonConvert.DeserializeObject<Employee>(jsonStr);
-
-            if (res == null)
-            {
-                return NotFound();
-            }
-
-            return View(res);
 
 
 
-        }
 
 
-
-        [HttpPost, ActionName("Delete")]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var accessToken = HttpContext.Session.GetString("JWToken");
-            var url = baseUrl + id;
-            HttpClient client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            await client.DeleteAsync(url);
-            return RedirectToAction(nameof(Index));
-        }
 
 
     }

@@ -20,14 +20,14 @@ namespace CRUDwebapp.Controllers
             return View();
         }
 
-        public async Task<IActionResult> LoginUser(UserInfo user)
+/*        public async Task<IActionResult> LoginUser(UserInfo user)
         {
             using (var httpClient = new HttpClient())
             {
                 StringContent content = new StringContent(JsonConvert.SerializeObject(user), Encoding.UTF8, "application/json");
                 using (var response = await httpClient.PostAsync("http://localhost:5272/api/Token", content))
                 {
-                    /*HttpContext.Session.SetString("JWToken", token);*/
+                    *//*HttpContext.Session.SetString("JWToken", token);*//*
                     string token = await response.Content.ReadAsStringAsync();
                     if (token == "Invalid Credentials")
                     {
@@ -50,7 +50,7 @@ namespace CRUDwebapp.Controllers
             HttpContext.Session.Clear(); //clear token
             return Redirect("~/Dashboard/Index");
         }
-
+*/
 
 
 

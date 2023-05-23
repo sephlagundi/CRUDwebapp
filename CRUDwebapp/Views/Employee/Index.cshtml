@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Index";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+
 }
 
 <h1>Employee List</h1>
@@ -14,9 +14,9 @@
 <table class="table">
     <thead>
         <tr>
-            <th>
+@*            <th>
                 @Html.DisplayNameFor(model => model.Id)
-            </th>
+            </th>*@
             <th>
                 @Html.DisplayNameFor(model => model.Name)
             </th>
@@ -26,16 +26,20 @@
     <tbody>
 @foreach (var item in Model) {
         <tr>
-            <td>
+@*            <td>
                 @Html.DisplayFor(modelItem => item.Id)
-            </td>
+            </td>*@
             <td>
                 @Html.DisplayFor(modelItem => item.Name)
             </td>
             <td>
-                @Html.ActionLink("Edit", "Edit", new {  id=item.Id  }) |
+@*                    <a class="btn btn-outline-dark" asp-controller="Employee" asp-action="Edit" asp-route-itemid="Id">Edit</a>*@
+
+
+
+@*                @Html.ActionLink("Edit", "Edit", new {  id=item.Id  }) |
                     @Html.ActionLink("Details", "Details", new { id=item.Id  }) |
-                    @Html.ActionLink("Delete", "Delete", new { id=item.Id  })
+                    @Html.ActionLink("Delete", "Delete", new { id=item.Id  })*@
             </td>
         </tr>
 }
